@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditGuard — Credit History Assessment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060b18;
+            --surface: #0d1525;
+            --surface2: #131e30;
+            --surface3: #1a2640;
+            --border: #1e3050;
+            --border-mid: #243a5e;
+            --blue: #3b82f6;
+            --blue-bright: #60a5fa;
+            --blue-glow: rgba(59,130,246,0.15);
+            --teal: #14b8a6;
+            --teal-glow: rgba(20,184,166,0.12);
+            --purple: #8b5cf6;
+            --purple-glow: rgba(139,92,246,0.12);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245,158,11,0.12);
+            --amber-border: rgba(245,158,11,0.3);
+            --green: #10b981;
+            --green-glow: rgba(16,185,129,0.12);
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #475569;
+            --accent: #60a5fa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        header {
+            background: rgba(6,11,24,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 60px;
+            height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .logo { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .logo-mark { width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #14b8a6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .logo span { color: var(--blue-bright); }
+
+        .steps { display: flex; align-items: center; gap: 4px; }
+        .step { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-dim); padding: 5px 14px; border-radius: 20px; font-weight: 500; }
+        .step.active { color: var(--amber); background: var(--amber-glow); border: 1px solid var(--amber-border); }
+        .step.done { color: var(--teal); }
+        .step-num { width: 18px; height: 18px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+        .step.active .step-num { background: var(--amber); color: #000; }
+        .step.done .step-num { background: var(--teal); color: #fff; font-size: 9px; }
+        .step-div { color: var(--text-dim); font-size: 10px; }
+
+        /* HERO STRIP — compact for step 2 */
+        .hero-strip {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 40px 60px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-strip::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 100% at 80% 50%, rgba(245,158,11,0.04) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .strip-left h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .strip-left h1 em { font-style: italic; color: var(--amber); }
+
+        .strip-left p {
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 600px;
+        }
+
+        .strip-left .info-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--blue-bright);
+            background: var(--blue-glow);
+            border: 1px solid rgba(96,165,250,0.2);
+            padding: 6px 14px;
+            border-radius: 8px;
+        }
+
+        .strip-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .demo-select-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface2);
+            border: 1px solid var(--border-mid);
+            border-radius: 10px;
+            padding: 0 14px;
+            height: 44px;
+        }
+
+        .demo-select-wrap span { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+
+        .demo-select { background: transparent; border: none; color: var(--text-muted); font-family: 'Inter', sans-serif; font-size: 12px; outline: none; cursor: pointer; }
+
+        .demo-btn { height: 44px; padding: 0 20px; background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(245,158,11,0.12)); border: 1px solid rgba(245,158,11,0.4); color: var(--amber); border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .demo-btn:hover { background: linear-gradient(135deg, rgba(245,158,11,0.35), rgba(245,158,11,0.2)); transform: translateY(-1px); }
+
+        /* FORM LAYOUT */
+        .form-wrap { display: grid; grid-template-columns: 220px 1fr; }
+
+        .form-sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 32px 0;
+            position: sticky;
+            top: 66px;
+            height: calc(100vh - 66px);
+            overflow-y: auto;
+        }
+
+        .sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); padding: 0 24px; margin-bottom: 12px; }
+
+        .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 10px 24px; font-size: 13px; color: var(--text-dim); cursor: pointer; transition: all 0.2s; border-left: 2px solid transparent; text-decoration: none; }
+        .sidebar-item:hover { color: var(--text-muted); background: var(--surface2); }
+        .sidebar-item.active { color: var(--amber); border-left-color: var(--amber); background: var(--amber-glow); }
+
+        .sidebar-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .dot-purple { background: var(--purple); }
+        .dot-teal { background: var(--teal); }
+        .dot-amber { background: var(--amber); }
+        .dot-blue { background: var(--blue-bright); }
+        .dot-red { background: var(--red); }
+        .dot-green { background: var(--green); }
+
+        .form-main { padding: 48px 60px; }
+
+        .form-section { margin-bottom: 64px; scroll-margin-top: 100px; }
+
+        .section-banner { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+
+        .section-icon-large { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .sil-purple { background: var(--purple-glow); border: 1px solid rgba(139,92,246,0.2); }
+        .sil-teal { background: var(--teal-glow); border: 1px solid rgba(20,184,166,0.2); }
+        .sil-amber { background: var(--amber-glow); border: 1px solid rgba(245,158,11,0.2); }
+        .sil-blue { background: var(--blue-glow); border: 1px solid rgba(59,130,246,0.2); }
+        .sil-red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+        .sil-green { background: var(--green-glow); border: 1px solid rgba(16,185,129,0.2); }
+
+        .section-banner-text h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+        .section-banner-text p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+        .section-banner-text .hint { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; }
+
+        .sub-label { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; margin-top: 28px; display: flex; align-items: center; gap: 10px; }
+        .sub-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .sl-purple { color: var(--purple); }
+        .sl-teal { color: var(--teal); }
+        .sl-amber { color: var(--amber); }
+        .sl-blue { color: var(--blue-bright); }
+        .sl-red { color: var(--red); }
+        .sl-green { color: var(--green); }
+
+        .auto-badge { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: var(--green); font-size: 9px; padding: 2px 8px; border-radius: 8px; letter-spacing: 0.5px; font-weight: 600; margin-left: 8px; }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .grid.g2 { grid-template-columns: repeat(2, 1fr); }
+        .grid.g3 { grid-template-columns: repeat(3, 1fr); }
+        .grid.g6 { grid-template-columns: repeat(6, 1fr); }
+
+        .field { display: flex; flex-direction: column; gap: 8px; }
+        .field.demo-filled input, .field.demo-filled select { border-color: var(--teal) !important; background: rgba(20,184,166,0.05) !important; }
+
+        label { font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.3px; }
+        label .tip { color: var(--text-dim); font-weight: 400; font-size: 11px; }
+
+        input, select { height: 44px; padding: 0 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: all 0.2s; -webkit-appearance: none; appearance: none; width: 100%; }
+        input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-glow); background: var(--surface3); }
+        input::placeholder { color: var(--text-dim); }
+        select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; }
+        select:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-glow); }
+        select option { background: #131e30; color: var(--text); }
+
+        .toggle { display: flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; height: 44px; background: var(--surface2); }
+        .toggle input[type="radio"] { display: none; }
+        .toggle label { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-dim); transition: all 0.2s; height: 100%; border: none; background: transparent; }
+        .toggle input[type="radio"]:checked + label { background: rgba(245,158,11,0.2); color: var(--amber); }
+
+        .form-footer {
+            position: sticky;
+            bottom: 0;
+            background: rgba(6,11,24,0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 18px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .btn-back { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 0 24px; height: 48px; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .btn-back:hover { border-color: var(--text-muted); color: var(--text); }
+
+        .btn-predict { background: linear-gradient(135deg, var(--blue), #1d4ed8); color: #fff; border: none; padding: 0 36px; height: 48px; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.25s; box-shadow: 0 4px 20px rgba(59,130,246,0.35); }
+        .btn-predict:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(59,130,246,0.5); }
+
+        .pulse { width: 8px; height: 8px; background: var(--teal); border-radius: 50%; animation: pulse 1.5s infinite; box-shadow: 0 0 6px var(--teal); }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+        @media (max-width: 1100px) {
+            .form-wrap { grid-template-columns: 1fr; }
+            .form-sidebar { display: none; }
+            .hero-strip { grid-template-columns: 1fr; }
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            .grid.g6 { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logo-mark">⚡</div>
+        Credit<span>Guard</span>
+    </div>
+    <div class="steps">
+        <div class="step done"><div class="step-num">✓</div> Applicant Info</div>
+        <div class="step-div">›</div>
+        <div class="step active"><div class="step-num">2</div> Credit History</div>
+        <div class="step-div">›</div>
+        <div class="step"><div class="step-num">3</div> Result</div>
+    </div>
+</header>
+
+<!-- HERO STRIP -->
+<div class="hero-strip">
+    <div class="strip-left">
+        <h1>Credit History & <em>Bureau Data</em></h1>
+        <p>Enter the applicant's external credit scores, bureau records, payment behaviour and previous loan history. All fields are optional — any blank field will use training data medians automatically.</p>
+        <div class="info-note">
+            ℹ️ Bank officer fills this section using data retrieved from the credit bureau system
+        </div>
+    </div>
+    <div class="strip-right">
+        <div class="demo-select-wrap">
+            <span>Auto-fill:</span>
+            <select class="demo-select" id="demoSelect">
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        <button class="demo-btn" type="button" onclick="loadOfficerDemo()">⚡ Load Demo</button>
+    </div>
+</div>
+
+<form action="/predict" method="POST" id="officerForm">
+    <input type="hidden" name="demoIndex" id="demoIndexInput">
+<div class="form-wrap">
+
+    <div class="form-sidebar">
+        <div class="sidebar-label">Sections</div>
+        <a href="#sec-scores" class="sidebar-item active"><div class="sidebar-dot dot-purple"></div> Credit Scores</a>
+        <a href="#sec-social" class="sidebar-item"><div class="sidebar-dot dot-teal"></div> Social Circle</a>
+        <a href="#sec-bureau" class="sidebar-item"><div class="sidebar-dot dot-amber"></div> Bureau History</a>
+        <a href="#sec-enquiries" class="sidebar-item"><div class="sidebar-dot dot-amber"></div> Enquiries</a>
+        <a href="#sec-prev" class="sidebar-item"><div class="sidebar-dot dot-blue"></div> Previous Apps</a>
+        <a href="#sec-payments" class="sidebar-item"><div class="sidebar-dot dot-red"></div> Payment Behaviour</a>
+        <a href="#sec-card" class="sidebar-item"><div class="sidebar-dot dot-green"></div> Credit Card</a>
+    </div>
+
+    <div class="form-main">
+
+        <!-- EXTERNAL SCORES -->
+        <div class="form-section" id="sec-scores">
+            <div class="section-banner">
+                <div class="section-icon-large sil-purple">📊</div>
+                <div class="section-banner-text">
+                    <h2>External Credit Scores</h2>
+                    <p>Normalized scores from third-party credit bureaus. Scale 0.0 to 1.0 — higher means lower risk. These are among the strongest predictors in the model.</p>
+                    <span class="hint">💡 Leave blank if unavailable — training median will be used</span>
+                </div>
+            </div>
+            <div class="grid g3">
+                <div class="field">
+                    <label>External Score 1</label>
+                    <input type="number" name="EXT_SOURCE_1" id="o_ext1" min="0" max="1" step="any" placeholder="0.500">
+                </div>
+                <div class="field">
+                    <label>External Score 2 <span class="tip">strongest predictor</span></label>
+                    <input type="number" name="EXT_SOURCE_2" id="o_ext2" min="0" max="1" step="any" placeholder="0.500">
+                </div>
+                <div class="field">
+                    <label>External Score 3</label>
+                    <input type="number" name="EXT_SOURCE_3" id="o_ext3" min="0" max="1" step="any" placeholder="0.500">
+                </div>
+            </div>
+        </div>
+
+        <!-- SOCIAL CIRCLE -->
+        <div class="form-section" id="sec-social">
+            <div class="section-banner">
+                <div class="section-icon-large sil-teal">👥</div>
+                <div class="section-banner-text">
+                    <h2>Social Circle Risk</h2>
+                    <p>DPD = Days Past Due. How many people in the applicant's social circle have been observed or have defaulted on payments. A high rate here is a weak but real risk signal.</p>
+                </div>
+            </div>
+            <div class="sub-label sl-teal">30-Day DPD Observations <span class="auto-badge">Default rate auto-calculated</span></div>
+            <div class="grid">
+                <div class="field"><label>Observed (60 DPD)</label><input type="number" name="OBS_60_CNT_SOCIAL_CIRCLE" id="o_obs60" min="0" placeholder="0" value="0"></div>
+                <div class="field"><label>Defaulted (60 DPD)</label><input type="number" name="DEF_60_CNT_SOCIAL_CIRCLE" id="o_def60" min="0" placeholder="0" value="0"></div>
+            </div>
+        </div>
+
+        <!-- BUREAU HISTORY -->
+        <div class="form-section" id="sec-bureau">
+            <div class="section-banner">
+                <div class="section-icon-large sil-amber">🏛️</div>
+                <div class="section-banner-text">
+                    <h2>Credit Bureau History</h2>
+                    <p>Aggregated data pulled from external credit bureau records — loans, overdue, debt levels and repayment behaviour across all lenders.</p>
+                </div>
+            </div>
+            <div class="sub-label sl-amber">Overview</div>
+            <div class="grid">
+                <div class="field"><label>Number of Bureau Credits</label><input type="number" name="SK_ID_BUREAU_NUNIQUE" id="o_bureau_n" min="0" placeholder="3"></div>
+                <div class="field"><label>Avg Days Since Credit Taken <span class="tip">negative = days ago</span></label><input type="number" name="DAYS_CREDIT_MEAN" id="o_days_credit" placeholder="-500"></div>
+                <div class="field"><label>Most Recent Credit <span class="tip">days ago</span></label><input type="number" name="DAYS_CREDIT_MAX" id="o_days_credit_max" placeholder="-30"></div>
+                <div class="field"><label>Avg Overdue Days</label><input type="number" name="CREDIT_DAY_OVERDUE_MEAN" id="o_overdue_mean" min="0" placeholder="0" value="0"></div>
+                <div class="field"><label>Max Overdue Days</label><input type="number" name="CREDIT_DAY_OVERDUE_MAX" id="o_overdue_max" min="0" placeholder="0" value="0"></div>
+                <div class="field"><label>Total Prolongations</label><input type="number" name="CNT_CREDIT_PROLONG_SUM" id="o_prolong" min="0" placeholder="0" value="0"></div>
+            </div>
+            <div class="sub-label sl-amber">Outstanding Amounts <span class="auto-badge">Debt ratio auto-calculated</span></div>
+            <div class="grid">
+                <div class="field"><label>Total Credit Amount <span class="tip">₹</span></label><input type="number" name="AMT_CREDIT_SUM_SUM" id="o_credit_sum" min="0" placeholder="500000"></div>
+                <div class="field"><label>Total Current Debt <span class="tip">₹</span></label><input type="number" name="AMT_CREDIT_SUM_DEBT_SUM" id="o_debt_sum" min="0" placeholder="100000"></div>
+                <div class="field"><label>Total Overdue Amount <span class="tip">₹</span></label><input type="number" name="AMT_CREDIT_SUM_OVERDUE_SUM" id="o_overdue_sum" min="0" placeholder="0" value="0"></div>
+                <div class="field"><label>Active Credits %</label><input type="number" name="IS_ACTIVE_MEAN" id="o_active" min="0" max="1" step="any" placeholder="0.50"></div>
+                <div class="field"><label>Has Overdue Right Now?</label>
+                    <div class="toggle">
+                        <input type="radio" name="HAS_OVERDUE_MEAN" id="ov1" value="1"><label for="ov1">Yes</label>
+                        <input type="radio" name="HAS_OVERDUE_MEAN" id="ov0" value="0" checked><label for="ov0">No</label>
+                    </div>
+                </div>
+                <div class="field"><label>Months Balance Max</label><input type="number" name="MONTHS_BALANCE_MAX" id="o_months" placeholder="-1"></div>
+            </div>
+        </div>
+
+        <!-- ENQUIRIES -->
+        <div class="form-section" id="sec-enquiries">
+            <div class="section-banner">
+                <div class="section-icon-large sil-amber">🔍</div>
+                <div class="section-banner-text">
+                    <h2>Credit Bureau Enquiries</h2>
+                    <p>How many times has the applicant's credit been checked in the last year? Frequent enquiries can indicate financial stress.</p>
+                </div>
+            </div>
+            <div class="grid g3">
+                <div class="field"><label>Enquiries — Last Year <span class="tip">total</span></label><input type="number" name="AMT_REQ_CREDIT_BUREAU_YEAR" id="o_enq_year" min="0" placeholder="1" value="0"></div>
+            </div>
+        </div>
+
+        <!-- PREVIOUS APPLICATIONS -->
+        <div class="form-section" id="sec-prev">
+            <div class="section-banner">
+                <div class="section-icon-large sil-blue">📋</div>
+                <div class="section-banner-text">
+                    <h2>Previous Applications at Home Credit</h2>
+                    <p>History of prior loan applications with Home Credit — not external lenders. Approval rate is automatically calculated from count inputs.</p>
+                </div>
+            </div>
+            <div class="sub-label sl-blue">Application Counts <span class="auto-badge">Approval rates auto-calculated</span></div>
+            <div class="grid">
+                <div class="field"><label>Total Previous Applications</label><input type="number" name="SK_ID_PREV_NUNIQUE" id="o_prev_total" min="0" placeholder="2"></div>
+                <div class="field"><label>Number Approved</label><input type="number" name="num_approved" id="o_approved" min="0" placeholder="1"></div>
+                <div class="field"><label>Number Refused</label><input type="number" name="num_refused" id="o_refused" min="0" placeholder="1"></div>
+                <div class="field"><label>Days Since Last Decision <span class="tip">negative</span></label><input type="number" name="DAYS_DECISION_MAX" id="o_days_dec" placeholder="-365"></div>
+            </div>
+            <div class="sub-label sl-blue">Loan Details</div>
+            <div class="grid">
+                <div class="field"><label>Avg Previous Credit <span class="tip">₹</span></label><input type="number" name="AMT_CREDIT_MEAN" id="o_credit_mean" min="0" placeholder="300000"></div>
+                <div class="field"><label>Avg Previous Annuity <span class="tip">₹</span></label><input type="number" name="AMT_ANNUITY_MEAN" id="o_ann_mean" min="0" placeholder="15000"></div>
+                <div class="field"><label>Avg Payment Term <span class="tip">months</span></label><input type="number" name="CNT_PAYMENT_MEAN" id="o_cnt_payment" min="0" placeholder="24"></div>
+            </div>
+        </div>
+
+        <!-- PAYMENT BEHAVIOUR -->
+        <div class="form-section" id="sec-payments">
+            <div class="section-banner">
+                <div class="section-icon-large sil-red">⚠️</div>
+                <div class="section-banner-text">
+                    <h2>Installment Payment Behaviour</h2>
+                    <p>Historical payment data from POS cash loans and installment payments. Payment delays and late rates are strong default signals.</p>
+                </div>
+            </div>
+            <div class="sub-label sl-red">Days Past Due</div>
+            <div class="grid">
+                <div class="field"><label>Worst DPD DEF Ever</label><input type="number" name="SK_DPD_DEF_MAX" id="o_dpd_def" min="0" placeholder="0" value="0"></div>
+            </div>
+            <div class="sub-label sl-red">Payment Amounts <span class="auto-badge">Completion rate auto-calculated</span></div>
+            <div class="grid">
+                <div class="field"><label>Avg Payment Delay <span class="tip">days</span></label><input type="number" name="PAYMENT_DELAY_MEAN" id="o_delay_mean" placeholder="0" value="0"></div>
+                <div class="field"><label>Max Payment Delay <span class="tip">days</span></label><input type="number" name="PAYMENT_DELAY_MAX" id="o_delay_max" placeholder="0" value="0"></div>
+                <div class="field"><label>Avg Expected Installment <span class="tip">₹</span></label><input type="number" name="AMT_INSTALMENT_MEAN" id="o_inst_mean" min="0" placeholder="15000"></div>
+                <div class="field"><label>Total Amount Paid <span class="tip">₹</span></label><input type="number" name="AMT_PAYMENT_SUM" id="o_pay_sum" min="0" placeholder="100000"></div>
+            </div>
+        </div>
+
+        <!-- CREDIT CARD -->
+        <div class="form-section" id="sec-card">
+            <div class="section-banner">
+                <div class="section-icon-large sil-green">💳</div>
+                <div class="section-banner-text">
+                    <h2>Credit Card Behaviour</h2>
+                    <p>Monthly balance, utilization and drawing patterns from credit card history. High utilization relative to limit is a risk signal.</p>
+                </div>
+            </div>
+            <div class="grid">
+                <div class="field"><label>Total Drawings <span class="tip">₹</span></label><input type="number" name="AMT_DRAWINGS_CURRENT_SUM" id="o_drawings" min="0" placeholder="10000"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="form-footer">
+    <a href="/" class="btn-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Applicant
+    </a>
+    <button type="submit" class="btn-predict" id="predict-btn">
+        <div class="pulse"></div>
+        Run Risk Assessment
+    </button>
+</div>
+</form>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    console.log("JS LOADED");
+
+    // ===== INPUT STEP FIX =====
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.step = "any";
+    });
+
+    // ===== SUBMIT HANDLER =====
+    const form = document.getElementById('officerForm');
+    if (form) {
+        form.addEventListener('submit', function () {
+            const total = parseFloat(document.getElementById('o_prev_total').value) || 1;
+            const approved = parseFloat(document.getElementById('o_approved').value) || 0;
+            const refused = parseFloat(document.getElementById('o_refused').value) || 0;
+
+            let af = document.createElement('input');
+            af.type = 'hidden';
+            af.name = 'num_approved';
+            af.value = approved;
+
+            let rf = document.createElement('input');
+            rf.type = 'hidden';
+            rf.name = 'num_refused';
+            rf.value = refused;
+
+            this.appendChild(af);
+            this.appendChild(rf);
+        });
+    }
+
+});
+
+// ===== AUTO FILL FUNCTION =====
+function fillOfficerForm(row) {
+    const fields = {
+        'o_ext1': row.EXT_SOURCE_1,
+        'o_ext2': row.EXT_SOURCE_2,
+        'o_ext3': row.EXT_SOURCE_3,
+        'o_obs60': row.OBS_60_CNT_SOCIAL_CIRCLE,
+        'o_def60': row.DEF_60_CNT_SOCIAL_CIRCLE,
+        'o_bureau_n': row.SK_ID_BUREAU_NUNIQUE,
+        'o_days_credit': row.DAYS_CREDIT_MEAN,
+        'o_days_credit_max': row.DAYS_CREDIT_MAX,
+        'o_overdue_mean': row.CREDIT_DAY_OVERDUE_MEAN,
+        'o_overdue_max': row.CREDIT_DAY_OVERDUE_MAX,
+        'o_prolong': row.CNT_CREDIT_PROLONG_SUM,
+        'o_credit_sum': row.AMT_CREDIT_SUM_SUM,
+        'o_debt_sum': row.AMT_CREDIT_SUM_DEBT_SUM,
+        'o_overdue_sum': row.AMT_CREDIT_SUM_OVERDUE_SUM,
+        'o_active': row.IS_ACTIVE_MEAN,
+        'o_months': row.MONTHS_BALANCE_MAX,
+        'o_enq_year': row.AMT_REQ_CREDIT_BUREAU_YEAR,
+        'o_prev_total': row.SK_ID_PREV_NUNIQUE,
+        'o_credit_mean': row.AMT_CREDIT_MEAN,
+        'o_ann_mean': row.AMT_ANNUITY_MEAN,
+        'o_cnt_payment': row.CNT_PAYMENT_MEAN,
+        'o_days_dec': row.DAYS_DECISION_MAX,
+        'o_dpd_def': row.SK_DPD_DEF_MAX,
+        'o_delay_mean': row.PAYMENT_DELAY_MEAN,
+        'o_delay_max': row.PAYMENT_DELAY_MAX,
+        'o_inst_mean': row.AMT_INSTALMENT_MEAN,
+        'o_pay_sum': row.AMT_PAYMENT_SUM,
+        'o_drawings': row.AMT_DRAWINGS_CURRENT_SUM
+    };
+
+    for (const [id, val] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (el && val !== undefined && val !== null) {
+            el.value = typeof val === 'number' ? parseFloat(val.toFixed(6)) : val;
+        }
+    }
+
+    if (row.APPROVED_MEAN !== undefined && row.SK_ID_PREV_NUNIQUE) {
+        const total = parseFloat(row.SK_ID_PREV_NUNIQUE) || 1;
+        document.getElementById('o_approved').value = Math.round((row.APPROVED_MEAN || 0) * total);
+        document.getElementById('o_refused').value = Math.round((row.REFUSED_MEAN || 0) * total);
+    }
+}
+
+// ===== DEMO LOADER =====
+function loadOfficerDemo() {
+    console.log("BUTTON CLICKED");
+
+    const val = document.getElementById("demoSelect").value;
+
+    fetch('/get_demo_data')
+        .then(res => res.json())
+        .then(data => {
+            const indexMap = { high: 0, medium: 1, low: 2 };
+
+            // ✅ CLEAR FIRST
+            document.querySelectorAll('input').forEach(i => i.value = '');
+
+            const selected = data[indexMap[val]];
+
+            console.log("Demo row loaded:", selected);
+
+            // ✅ SET AFTER CLEARING
+            document.getElementById("demoIndexInput").value = indexMap[val];
+
+            fillOfficerForm(selected);
+        })
+        .catch(err => console.error(err));
+}
+</script>
+</body>
+</html>

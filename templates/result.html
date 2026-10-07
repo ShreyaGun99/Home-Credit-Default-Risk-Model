@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditGuard — Assessment Result</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #060b18;
+            --surface: #0d1525;
+            --surface2: #131e30;
+            --surface3: #1a2640;
+            --border: #1e3050;
+            --blue: #3b82f6;
+            --blue-bright: #60a5fa;
+            --blue-glow: rgba(59,130,246,0.15);
+            --teal: #14b8a6;
+            --green: #10b981;
+            --green-dim: rgba(16,185,129,0.08);
+            --green-border: rgba(16,185,129,0.2);
+            --amber: #f59e0b;
+            --amber-dim: rgba(245,158,11,0.08);
+            --orange: #f97316;
+            --orange-dim: rgba(249,115,22,0.08);
+            --red: #ef4444;
+            --red-dim: rgba(239,68,68,0.08);
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #475569;
+            --accent: #60a5fa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        header {
+            background: rgba(6,11,24,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 60px;
+            height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .logo-mark { width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6, #14b8a6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .logo span { color: var(--blue-bright); }
+
+        .steps { display: flex; align-items: center; gap: 4px; }
+        .step { display: flex; align-items: center; gap: 7px; font-size: 12px; padding: 5px 14px; border-radius: 20px; font-weight: 500; }
+        .step.done { color: var(--teal); }
+        .step.active { color: var(--green); background: var(--green-dim); border: 1px solid var(--green-border); }
+        .step-num { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+        .step.done .step-num { background: var(--teal); color: #fff; font-size: 9px; }
+        .step.active .step-num { background: var(--green); color: #fff; font-size: 9px; }
+        .step-div { color: var(--text-dim); font-size: 10px; }
+
+        /* Full width two-col result layout */
+        .result-page {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            min-height: calc(100vh - 66px);
+        }
+
+        /* LEFT: main result content */
+        .result-main {
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* TOP banner */
+        .result-banner {
+            border-radius: 20px;
+            padding: 48px 52px;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+        .low .result-banner { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.04)); border: 1px solid rgba(16,185,129,0.2); }
+        .medium .result-banner { background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.04)); border: 1px solid rgba(245,158,11,0.2); }
+        .high .result-banner { background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(249,115,22,0.04)); border: 1px solid rgba(249,115,22,0.2); }
+        .critical .result-banner { background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.04)); border: 1px solid rgba(239,68,68,0.2); }
+
+        .banner-inner { display: flex; align-items: center; gap: 40px; }
+
+        .risk-badge-large {
+            padding: 8px 22px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .low .risk-badge-large { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+        .medium .risk-badge-large { background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.25); color: var(--amber); }
+        .high .risk-badge-large { background: var(--orange-dim); border: 1px solid rgba(249,115,22,0.25); color: var(--orange); }
+        .critical .risk-badge-large { background: var(--red-dim); border: 1px solid rgba(239,68,68,0.25); color: var(--red); }
+
+        .risk-title-main {
+            font-family: 'Playfair Display', serif;
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+        }
+
+        .low .risk-title-main { color: var(--green); }
+        .medium .risk-title-main { color: var(--amber); }
+        .high .risk-title-main { color: var(--orange); }
+        .critical .risk-title-main { color: var(--red); }
+
+        .risk-sub { font-size: 16px; color: var(--text-muted); }
+
+        /* Meter bar */
+        .meter-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px 40px;
+            animation: slideUp 0.6s ease;
+        }
+
+        .meter-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+        .meter-label-text { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); }
+        .meter-pct { font-family: 'Playfair Display', serif; font-size: 44px; font-weight: 700; }
+
+        .low .meter-pct { color: var(--green); }
+        .medium .meter-pct { color: var(--amber); }
+        .high .meter-pct { color: var(--orange); }
+        .critical .meter-pct { color: var(--red); }
+
+        .meter-track { height: 14px; background: var(--surface2); border-radius: 7px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border); }
+        .meter-fill { height: 100%; border-radius: 7px; animation: fillAnim 1.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+        @keyframes fillAnim { from { width: 0; } }
+
+        .low .meter-fill { background: linear-gradient(90deg, #059669, var(--green), #34d399); }
+        .medium .meter-fill { background: linear-gradient(90deg, #b45309, var(--amber), #fcd34d); }
+        .high .meter-fill { background: linear-gradient(90deg, #c2410c, var(--orange), #fb923c); }
+        .critical .meter-fill { background: linear-gradient(90deg, #b91c1c, var(--red), #f87171); }
+
+        .meter-markers { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); position: relative; }
+        .meter-markers::before { content: ''; position: absolute; top: -20px; left: 50%; width: 1px; height: 12px; background: var(--text-dim); opacity: 0.3; }
+
+        /* Recommendation msg */
+        .msg-card {
+            border-radius: 14px;
+            padding: 20px 24px;
+            font-size: 14px;
+            line-height: 1.65;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            animation: slideUp 0.7s ease;
+        }
+
+        .msg-icon { font-size: 20px; flex-shrink: 0; }
+
+        .low .msg-card { background: var(--green-dim); border: 1px solid var(--green-border); color: #6ee7b7; }
+        .medium .msg-card { background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.2); color: #fcd34d; }
+        .high .msg-card { background: var(--orange-dim); border: 1px solid rgba(249,115,22,0.2); color: #fdba74; }
+        .critical .msg-card { background: var(--red-dim); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+
+        /* Analysis grid */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            animation: slideUp 0.8s ease;
+        }
+
+        .analysis-col {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+        }
+
+        .analysis-col h3 {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .col-risk h3 { color: var(--red); }
+        .col-strength h3 { color: var(--green); }
+
+        .analysis-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+        .analysis-list li {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            padding: 10px 14px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .col-risk .analysis-list li { background: var(--red-dim); border-left: 2px solid rgba(239,68,68,0.4); }
+        .col-strength .analysis-list li { background: var(--green-dim); border-left: 2px solid rgba(16,185,129,0.4); }
+        .li-dot { flex-shrink: 0; margin-top: 3px; font-size: 10px; }
+
+        /* Actions */
+        .actions { display: flex; gap: 12px; animation: slideUp 0.9s ease; }
+
+        .btn { padding: 0 28px; height: 48px; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, var(--blue), #1d4ed8); color: #fff; border: none; box-shadow: 0 4px 15px rgba(59,130,246,0.3); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(59,130,246,0.4); }
+        .btn-secondary { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+
+        /* RIGHT: summary panel */
+        .result-sidebar {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            padding: 48px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .sidebar-title { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 20px; }
+
+        .summary-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+        }
+
+        .s-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+        .s-value { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--text); }
+        .s-value.decision-val { font-size: 28px; }
+        .low .s-value.decision-val { color: var(--green); }
+        .medium .s-value.decision-val { color: var(--amber); }
+        .high .s-value.decision-val { color: var(--orange); }
+        .critical .s-value.decision-val { color: var(--red); }
+
+        /* SVG gauge in sidebar */
+        .gauge-wrap { display: flex; justify-content: center; padding: 10px 0; }
+
+        .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .tier-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+        .tier-name { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+        .tier-range { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+        .tier-action { font-size: 10px; font-weight: 600; }
+
+        .t-low .tier-name { color: var(--green); }
+        .t-low .tier-action { color: var(--green); }
+        .t-medium .tier-name { color: var(--amber); }
+        .t-medium .tier-action { color: var(--amber); }
+        .t-high .tier-name { color: var(--orange); }
+        .t-high .tier-action { color: var(--orange); }
+        .t-critical .tier-name { color: var(--red); }
+        .t-critical .tier-action { color: var(--red); }
+
+        @media (max-width: 1100px) {
+            .result-page { grid-template-columns: 1fr; }
+            .result-sidebar { border-left: none; border-top: 1px solid var(--border); }
+            .analysis-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        <div class="logo-mark">⚡</div>
+        Credit<span>Guard</span>
+    </div>
+    <div class="steps">
+        <div class="step done"><div class="step-num">✓</div> Applicant Info</div>
+        <div class="step-div">›</div>
+        <div class="step done"><div class="step-num">✓</div> Credit History</div>
+        <div class="step-div">›</div>
+        <div class="step active"><div class="step-num">✓</div> Result</div>
+    </div>
+</header>
+
+<div class="result-page {{ risk_level }}">
+
+    <!-- LEFT MAIN -->
+    <div class="result-main">
+
+        <!-- Banner -->
+        <div class="result-banner">
+            <div class="banner-inner">
+                <div>
+                    <div class="risk-badge-large">
+                        {% if risk_level == 'low' %}✅ Low Risk
+                        {% elif risk_level == 'medium' %}⚠️ Medium Risk
+                        {% elif risk_level == 'high' %}🔶 High Risk
+                        {% else %}🚨 Critical Risk{% endif %}
+                    </div>
+                    <div class="risk-title-main">{{ risk_level | upper }} RISK</div>
+                    <div class="risk-sub">Credit risk assessment for <strong>{{ applicant_name }}</strong></div>
+                </div>
+                <!-- inline SVG visual -->
+                <svg viewBox="0 0 160 160" width="160" height="160" style="flex-shrink:0; opacity:0.85">
+                    <circle cx="80" cy="80" r="64" fill="none" stroke="#1e3050" stroke-width="12"/>
+                    {% if risk_level == 'low' %}
+                    <circle cx="80" cy="80" r="64" fill="none" stroke="#10b981" stroke-width="12"
+                        stroke-dasharray="{{ (percentage / 100 * 402) | int }} 402"
+                        stroke-dashoffset="100" stroke-linecap="round"
+                        transform="rotate(-90 80 80)" opacity="0.85"/>
+                    <text x="80" y="74" text-anchor="middle" fill="#10b981" font-family="Georgia,serif" font-size="28" font-weight="700">{{ percentage }}%</text>
+                    <text x="80" y="94" text-anchor="middle" fill="#475569" font-family="sans-serif" font-size="11">default prob.</text>
+                    {% elif risk_level == 'medium' %}
+                    <circle cx="80" cy="80" r="64" fill="none" stroke="#f59e0b" stroke-width="12"
+                        stroke-dasharray="{{ (percentage / 100 * 402) | int }} 402"
+                        stroke-dashoffset="100" stroke-linecap="round"
+                        transform="rotate(-90 80 80)" opacity="0.85"/>
+                    <text x="80" y="74" text-anchor="middle" fill="#f59e0b" font-family="Georgia,serif" font-size="28" font-weight="700">{{ percentage }}%</text>
+                    <text x="80" y="94" text-anchor="middle" fill="#475569" font-family="sans-serif" font-size="11">default prob.</text>
+                    {% elif risk_level == 'high' %}
+                    <circle cx="80" cy="80" r="64" fill="none" stroke="#f97316" stroke-width="12"
+                        stroke-dasharray="{{ (percentage / 100 * 402) | int }} 402"
+                        stroke-dashoffset="100" stroke-linecap="round"
+                        transform="rotate(-90 80 80)" opacity="0.85"/>
+                    <text x="80" y="74" text-anchor="middle" fill="#f97316" font-family="Georgia,serif" font-size="28" font-weight="700">{{ percentage }}%</text>
+                    <text x="80" y="94" text-anchor="middle" fill="#475569" font-family="sans-serif" font-size="11">default prob.</text>
+                    {% else %}
+                    <circle cx="80" cy="80" r="64" fill="none" stroke="#ef4444" stroke-width="12"
+                        stroke-dasharray="{{ (percentage / 100 * 402) | int }} 402"
+                        stroke-dashoffset="100" stroke-linecap="round"
+                        transform="rotate(-90 80 80)" opacity="0.85"/>
+                    <text x="80" y="74" text-anchor="middle" fill="#ef4444" font-family="Georgia,serif" font-size="28" font-weight="700">{{ percentage }}%</text>
+                    <text x="80" y="94" text-anchor="middle" fill="#475569" font-family="sans-serif" font-size="11">default prob.</text>
+                    {% endif %}
+                </svg>
+            </div>
+        </div>
+
+        <!-- Meter bar -->
+        <div class="meter-card">
+            <div class="meter-header">
+                <span class="meter-label-text">Default Probability Score</span>
+                <span class="meter-pct">{{ percentage }}%</span>
+            </div>
+            <div class="meter-track">
+                <div class="meter-fill" style="width: {{ percentage }}%"></div>
+            </div>
+            <div class="meter-markers">
+                <span>0% — Safe</span>
+                <span>50% — Decision threshold</span>
+                <span>100% — Certain default</span>
+            </div>
+        </div>
+
+        <!-- Message -->
+        <div class="msg-card">
+            <span class="msg-icon">
+                {% if risk_level == 'low' %}✅{% elif risk_level == 'medium' %}⚠️{% elif risk_level == 'high' %}🔶{% else %}🚨{% endif %}
+            </span>
+            <span>{{ risk_message }}</span>
+        </div>
+
+        <!-- Analysis -->
+        <div class="analysis-grid">
+            <div class="analysis-col col-risk">
+                <h3><span>⚠</span> Risk Factors</h3>
+                <ul class="analysis-list">
+                    {% for r in reasons %}
+                    <li><span class="li-dot">▸</span>{{ r }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="analysis-col col-strength">
+                <h3><span>✓</span> Positive Signals</h3>
+                <ul class="analysis-list">
+                    {% for s in strengths %}
+                    <li><span class="li-dot">▸</span>{{ s }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <a href="/" class="btn btn-secondary">← New Assessment</a>
+            <button onclick="window.print()" class="btn btn-primary">🖨 Print Report</button>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="result-sidebar">
+
+        <div>
+            <div class="sidebar-title">Assessment Summary</div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="summary-item">
+                    <div class="s-label">Risk Level</div>
+                    <div class="s-value">{{ risk_level | upper }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="s-label">Default Probability</div>
+                    <div class="s-value">{{ percentage }}%</div>
+                </div>
+                <div class="summary-item">
+                    <div class="s-label">Recommendation</div>
+                    <div class="s-value decision-val">
+                        {% if risk_level == 'low' %}Approve
+                        {% elif risk_level == 'medium' %}Review
+                        {% else %}Decline{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="sidebar-title">Risk Tiers</div>
+            <div class="tier-grid">
+                <div class="tier-item t-low">
+                    <div class="tier-name">Low</div>
+                    <div class="tier-range">Score &lt; 0.30</div>
+                    <div class="tier-action">→ Approve</div>
+                </div>
+                <div class="tier-item t-medium">
+                    <div class="tier-name">Medium</div>
+                    <div class="tier-range">0.30 – 0.50</div>
+                    <div class="tier-action">→ Review</div>
+                </div>
+                <div class="tier-item t-high">
+                    <div class="tier-name">High</div>
+                    <div class="tier-range">0.50 – 0.70</div>
+                    <div class="tier-action">→ Decline</div>
+                </div>
+                <div class="tier-item t-critical">
+                    <div class="tier-name">Critical</div>
+                    <div class="tier-range">Score &gt; 0.70</div>
+                    <div class="tier-action">→ Decline</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size:11px;color:var(--text-dim);line-height:1.7;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px;">
+            <strong style="color:var(--text-muted);display:block;margin-bottom:8px;">Model information</strong>
+            Probability score is the direct output of a LightGBM classifier trained on 3 lakh applicants across 7 data sources. AUC-ROC 0.77 · Accuracy 71%. Risk factors and positive signals are rule-based explanations — not model output.
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>
